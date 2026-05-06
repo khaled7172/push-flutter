@@ -3,41 +3,37 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
 import 'general_chat_screen.dart';
 import 'courses_screen.dart';
-import 'chat_screen.dart';
 
 class MajorOptionsScreen extends StatelessWidget {
   final String majorName;
+  final String majorId;
 
   const MajorOptionsScreen({
     super.key,
     required this.majorName,
+    required this.majorId,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(majorName),
-      ),
+      appBar: AppBar(title: Text(majorName)),
       body: Padding(
         padding: EdgeInsets.all(20.w),
         child: Column(
           children: [
-
             SizedBox(height: 20.h),
-
             Expanded(
               child: InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        title: "$majorName General Chat",
-                        roomId: majorName,
+                      builder: (_) => GeneralChatScreen(
+                        majorName: majorName,
+                        majorId: majorId,
                       ),
                     ),
                   );
@@ -46,8 +42,7 @@ class MajorOptionsScreen extends StatelessWidget {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: AppColors.primaryOrange,
-                    borderRadius:
-                    BorderRadius.circular(25.r),
+                    borderRadius: BorderRadius.circular(25.r),
                   ),
                   child: Center(
                     child: Text(
@@ -62,9 +57,7 @@ class MajorOptionsScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             SizedBox(height: 20.h),
-
             Expanded(
               child: InkWell(
                 onTap: () {
@@ -73,6 +66,7 @@ class MajorOptionsScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => CoursesScreen(
                         majorName: majorName,
+                        majorId: majorId,
                       ),
                     ),
                   );
@@ -80,11 +74,8 @@ class MajorOptionsScreen extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white10
-                        : AppColors.navyBlue,
-                    borderRadius:
-                    BorderRadius.circular(25.r),
+                    color: isDark ? Colors.white10 : AppColors.navyBlue,
+                    borderRadius: BorderRadius.circular(25.r),
                   ),
                   child: Center(
                     child: Text(

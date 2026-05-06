@@ -1,52 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
+import '../main.dart';
 import 'home_screen.dart';
 
 class VerifyScreen extends StatefulWidget {
-  const VerifyScreen({super.key});
+  final String email;
+
+  const VerifyScreen({super.key, required this.email});
 
   @override
   State<VerifyScreen> createState() => _VerifyScreenState();
 }
 
 class _VerifyScreenState extends State<VerifyScreen> {
-  final TextEditingController codeController =
-  TextEditingController();
+  final TextEditingController codeController = TextEditingController();
+  bool isLoading = false;
 
-  void verifyCode() {
+  Future<void> verifyCode() async {
     String code = codeController.text.trim();
 
-    if (code == "123456") {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(),
-        ),
+    if (code.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter the 6-digit code")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await supabase.auth.verifyOTP(
+        email: widget.email,
+        token: code,
+        type: OtpType.email,
       );
 
-      // later navigate to home page
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Invalid verification code"),
-        ),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Verification failed. Try again.")),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> resendCode() async {
+    try {
+      await supabase.auth.signInWithOtp(email: widget.email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Code resent to your email")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to resend code")),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Verify Email"),
-      ),
+      appBar: AppBar(title: const Text("Verify Email")),
       body: Stack(
         children: [
-
           Positioned(
             top: -60,
             right: -40,
@@ -59,7 +97,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
               ),
             ),
           ),
-
           Positioned(
             bottom: -80,
             left: -50,
@@ -72,7 +109,6 @@ class _VerifyScreenState extends State<VerifyScreen> {
               ),
             ),
           ),
-
           Center(
             child: Padding(
               padding: EdgeInsets.all(20.w),
@@ -82,19 +118,14 @@ class _VerifyScreenState extends State<VerifyScreen> {
                   color: isDark
                       ? Colors.white.withOpacity(0.08)
                       : Colors.white,
-                  borderRadius:
-                  BorderRadius.circular(25.r),
+                  borderRadius: BorderRadius.circular(25.r),
                   boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                    )
+                    BoxShadow(color: Colors.black12, blurRadius: 20)
                   ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     Text(
                       "Email Verification",
                       style: TextStyle(
@@ -102,56 +133,37 @@ class _VerifyScreenState extends State<VerifyScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     SizedBox(height: 15.h),
-
                     Text(
-                      "Enter the 6-digit code sent to your university email",
+                      "Enter the 6-digit code sent to ${widget.email}",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14.sp),
                     ),
-
                     SizedBox(height: 25.h),
-
                     TextField(
                       controller: codeController,
                       keyboardType: TextInputType.number,
+                      maxLength: 6,
                       decoration: const InputDecoration(
                         hintText: "Enter Code",
                       ),
                     ),
-
                     SizedBox(height: 25.h),
-
                     SizedBox(
                       width: double.infinity,
                       height: 55.h,
                       child: ElevatedButton(
-                        onPressed: verifyCode,
-                        child: Text(
-                          "Verify",
-                          style:
-                          TextStyle(fontSize: 18.sp),
-                        ),
+                        onPressed: isLoading ? null : verifyCode,
+                        child: isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text("Verify", style: TextStyle(fontSize: 18.sp)),
                       ),
                     ),
-
                     SizedBox(height: 15.h),
-
                     TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                          const SnackBar(
-                            content:
-                            Text("Code resent"),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Resend Code",
-                      ),
-                    )
+                      onPressed: resendCode,
+                      child: const Text("Resend Code"),
+                    ),
                   ],
                 ),
               ),
