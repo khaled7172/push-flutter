@@ -1,0 +1,107 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
+import 'general_chat_screen.dart';
+import 'courses_screen.dart';
+import 'chat_screen.dart';
+
+class MajorOptionsScreen extends StatelessWidget {
+  final String majorName;
+
+  const MajorOptionsScreen({
+    super.key,
+    required this.majorName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(majorName),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          children: [
+
+            SizedBox(height: 20.h),
+
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        title: "$majorName General Chat",
+                        roomId: majorName,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryOrange,
+                    borderRadius:
+                    BorderRadius.circular(25.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "General Chat Room",
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 20.h),
+
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CoursesScreen(
+                        majorName: majorName,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white10
+                        : AppColors.navyBlue,
+                    borderRadius:
+                    BorderRadius.circular(25.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Rooms By Courses",
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
