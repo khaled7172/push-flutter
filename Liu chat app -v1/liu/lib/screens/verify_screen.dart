@@ -35,7 +35,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
       await supabase.auth.verifyOTP(
         email: widget.email,
         token: code,
-        type: OtpType.signUp,
+        type: OtpType.signup,
       );
 
       // Initialize E2E encryption keys after successful login

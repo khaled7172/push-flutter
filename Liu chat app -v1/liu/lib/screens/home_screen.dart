@@ -1,6 +1,6 @@
 import '../main.dart';
 import 'login_screen.dart';
-import 'encryption_service.dart';
+import '../services/encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
