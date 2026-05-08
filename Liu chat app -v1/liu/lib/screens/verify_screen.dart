@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../main.dart';
+import '../services/encryption_service.dart';
 import 'home_screen.dart';
 
 class VerifyScreen extends StatefulWidget {
@@ -34,8 +35,11 @@ class _VerifyScreenState extends State<VerifyScreen> {
       await supabase.auth.verifyOTP(
         email: widget.email,
         token: code,
-        type: OtpType.email,
+        type: OtpType.signUp,
       );
+
+      // Initialize E2E encryption keys after successful login
+      await EncryptionService.initializeKeys();
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -115,9 +119,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
               child: Container(
                 padding: EdgeInsets.all(25.w),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.white,
+                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                   borderRadius: BorderRadius.circular(25.r),
                   boxShadow: const [
                     BoxShadow(color: Colors.black12, blurRadius: 20)
@@ -128,10 +130,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                   children: [
                     Text(
                       "Email Verification",
-                      style: TextStyle(
-                        fontSize: 25.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontSize: 25.sp, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 15.h),
                     Text(
@@ -144,9 +143,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                       controller: codeController,
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      decoration: const InputDecoration(
-                        hintText: "Enter Code",
-                      ),
+                      decoration: const InputDecoration(hintText: "Enter Code"),
                     ),
                     SizedBox(height: 25.h),
                     SizedBox(

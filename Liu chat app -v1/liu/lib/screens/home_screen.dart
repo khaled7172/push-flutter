@@ -1,7 +1,11 @@
+import '../main.dart';
+import 'login_screen.dart';
+import 'encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
 import 'majors_screen.dart';
+import 'conversations_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -19,10 +23,32 @@ class HomeScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("LIU Schools"),
-        centerTitle: true,
-      ),
+      actions: [
+  IconButton(
+    icon: const Icon(Icons.message),
+    tooltip: "Private Messages",
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ConversationsScreen()),
+    ),
+  ),
+  IconButton(
+    icon: const Icon(Icons.logout),
+    tooltip: "Logout",
+    onPressed: () async {
+      await EncryptionService.clearKeys();
+      await supabase.auth.signOut();
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (_) => false,
+        );
+      }
+    },
+  ),
+],
+
       body: ListView.builder(
         padding: EdgeInsets.only(top: 25.h),
         itemCount: schools.length,
