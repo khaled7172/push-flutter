@@ -14,20 +14,14 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
   bool isLoading = false;
-  bool obscurePassword = true;
-  bool obscureConfirm = true;
 
   bool isValidLiuEmail(String email) {
     return email.trim().toLowerCase().endsWith('@students.liu.edu.lb');
   }
 
   Future<void> registerUser() async {
-    final email = emailController.text.trim().toLowerCase();
-    final password = passwordController.text;
-    final confirm = confirmPasswordController.text;
+    String email = emailController.text.trim().toLowerCase();
 
     if (!isValidLiuEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,24 +30,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password must be at least 6 characters")),
-      );
-      return;
-    }
-
-    if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
-      return;
-    }
-
     setState(() => isLoading = true);
 
     try {
-      await supabase.auth.signUp(email: email, password: password);
+      await supabase.auth.signInWithOtp(email: email);
 
       if (mounted) {
         Navigator.push(
@@ -132,40 +112,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(15.r)),
                         ),
                       ),
-                      SizedBox(height: 15.h),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: "Password (min 6 characters)",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15.r)),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () =>
-                                setState(() => obscurePassword = !obscurePassword),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 15.h),
-                      TextField(
-                        controller: confirmPasswordController,
-                        obscureText: obscureConfirm,
-                        decoration: InputDecoration(
-                          hintText: "Confirm Password",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15.r)),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscureConfirm
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () =>
-                                setState(() => obscureConfirm = !obscureConfirm),
-                          ),
-                        ),
-                      ),
                       SizedBox(height: 25.h),
                       SizedBox(
                         width: double.infinity,
@@ -174,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: isLoading ? null : registerUser,
                           child: isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : Text("Register", style: TextStyle(fontSize: 18.sp)),
+                              : Text("Send OTP", style: TextStyle(fontSize: 18.sp)),
                         ),
                       ),
                     ],

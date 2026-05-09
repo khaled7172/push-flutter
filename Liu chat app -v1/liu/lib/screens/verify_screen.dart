@@ -8,8 +8,13 @@ import 'home_screen.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String email;
+  final bool isSignUp;
 
-  const VerifyScreen({super.key, required this.email});
+  const VerifyScreen({
+    super.key,
+    required this.email,
+    this.isSignUp = false,
+  });
 
   @override
   State<VerifyScreen> createState() => _VerifyScreenState();
@@ -20,7 +25,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   bool isLoading = false;
 
   Future<void> verifyCode() async {
-    String code = codeController.text.trim();
+    final code = codeController.text.trim();
 
     if (code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -35,10 +40,11 @@ class _VerifyScreenState extends State<VerifyScreen> {
       await supabase.auth.verifyOTP(
         email: widget.email,
         token: code,
-        type: OtpType.signup,
+        // signup type for registration, email type for OTP login
+        type: widget.isSignUp ? OtpType.signup : OtpType.email,
       );
 
-      // Initialize E2E encryption keys after successful login
+      // Initialize E2E encryption keys after confirmed identity
       await EncryptionService.initializeKeys();
 
       if (mounted) {
@@ -66,7 +72,14 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   Future<void> resendCode() async {
     try {
-      await supabase.auth.signInWithOtp(email: widget.email);
+      if (widget.isSignUp) {
+        await supabase.auth.resend(
+          type: OtpType.email,
+          email: widget.email,
+        );
+      } else {
+        await supabase.auth.signInWithOtp(email: widget.email);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Code resent to your email")),
@@ -90,11 +103,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: -60,
-            right: -40,
+            top: -60, right: -40,
             child: Container(
-              width: 180.w,
-              height: 180.w,
+              width: 180.w, height: 180.w,
               decoration: BoxDecoration(
                 color: AppColors.primaryOrange.withOpacity(0.3),
                 shape: BoxShape.circle,
@@ -102,11 +113,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
             ),
           ),
           Positioned(
-            bottom: -80,
-            left: -50,
+            bottom: -80, left: -50,
             child: Container(
-              width: 220.w,
-              height: 220.w,
+              width: 220.w, height: 220.w,
               decoration: BoxDecoration(
                 color: AppColors.navyBlue.withOpacity(0.25),
                 shape: BoxShape.circle,
@@ -121,9 +130,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                   borderRadius: BorderRadius.circular(25.r),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 20)
-                  ],
+                  boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 20)],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

@@ -4,9 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../main.dart';
 import 'register_screen.dart';
-import 'forgot_password_screen.dart';
-import 'home_screen.dart';
-import '../services/encryption_service.dart';
+import 'verify_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,17 +15,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
-  bool obscurePassword = true;
 
   bool isValidLiuEmail(String email) {
     return email.trim().toLowerCase().endsWith('@students.liu.edu.lb');
   }
 
   Future<void> loginUser() async {
-    final email = emailController.text.trim().toLowerCase();
-    final password = passwordController.text;
+    String email = emailController.text.trim().toLowerCase();
 
     if (!isValidLiuEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,24 +31,15 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your password")),
-      );
-      return;
-    }
-
     setState(() => isLoading = true);
 
     try {
-      await supabase.auth.signInWithPassword(email: email, password: password);
-
-      await EncryptionService.initializeKeys();
+      await supabase.auth.signInWithOtp(email: email);
 
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => HomeScreen()),
+          MaterialPageRoute(builder: (_) => VerifyScreen(email: email)),
         );
       }
     } on AuthException catch (e) {
@@ -126,42 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(15.r)),
                         ),
                       ),
-                      SizedBox(height: 15.h),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: "Password",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15.r)),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () =>
-                                setState(() => obscurePassword = !obscurePassword),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const ForgotPasswordScreen()),
-                          ),
-                          child: Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                              color: AppColors.primaryOrange,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20.h),
+                      SizedBox(height: 25.h),
                       SizedBox(
                         width: double.infinity,
                         height: 55.h,
@@ -169,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: isLoading ? null : loginUser,
                           child: isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : Text("Login", style: TextStyle(fontSize: 18.sp)),
+                              : Text("Send OTP", style: TextStyle(fontSize: 18.sp)),
                         ),
                       ),
                       SizedBox(height: 20.h),
