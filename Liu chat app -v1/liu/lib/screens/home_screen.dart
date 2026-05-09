@@ -23,6 +23,8 @@ class HomeScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Liu Chat"),
       actions: [
   IconButton(
     icon: const Icon(Icons.message),
@@ -48,6 +50,7 @@ class HomeScreen extends StatelessWidget {
     },
   ),
 ],
+      ),
 
       body: ListView.builder(
         padding: EdgeInsets.only(top: 25.h),
