@@ -120,16 +120,28 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
   }
 
   void sendMessage() {
-    if (messageController.text.trim().isEmpty || groupId == null) return;
+   if (messageController.text.trim().isEmpty || groupId == null) return;
 
-    channel?.sink.add(jsonEncode({
-      'type': 'group_message',
-      'group_id': groupId,
-      'content': messageController.text.trim(),
-    }));
+   final text = messageController.text.trim();
 
-    messageController.clear();
-  }
+   channel?.sink.add(jsonEncode({
+     'type': 'group_message',
+     'group_id': groupId,
+     'content': text,
+   }));
+
+   setState(() {
+     messages.add({
+       'content': text,
+       'sender_id': supabase.auth.currentUser!.id,
+       'created_at': DateTime.now().toIso8601String(),
+       'profiles': {'username': 'You'},
+     });
+   });
+
+   messageController.clear();
+   scrollToBottom();
+ }
 
   @override
   void dispose() {

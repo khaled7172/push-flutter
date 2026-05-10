@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/login_screen.dart';
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
           themeMode: ThemeMode.system,
           home: supabase.auth.currentSession != null
               ? HomeScreen()
-              : const LoginScreen(),
+              : const AuthScreen(),
         );
       },
     );

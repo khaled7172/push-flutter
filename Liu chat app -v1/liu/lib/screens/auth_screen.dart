@@ -3,30 +3,30 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../main.dart';
-import 'register_screen.dart';
 import 'verify_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController emailController = TextEditingController();
   bool isLoading = false;
 
   bool isValidLiuEmail(String email) {
-    return email.trim().toLowerCase().endsWith('@students.liu.edu.lb');
+    final regex = RegExp(r'^\d{8}@students\.liu\.edu\.lb$');
+    return regex.hasMatch(email.trim().toLowerCase());
   }
 
-  Future<void> loginUser() async {
-    String email = emailController.text.trim().toLowerCase();
+  Future<void> sendOtp() async {
+    final email = emailController.text.trim().toLowerCase();
 
     if (!isValidLiuEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please use a valid LIU student email")),
+        const SnackBar(content: Text("Enter a valid LIU student email (8-digit ID)")),
       );
       return;
     }
@@ -100,16 +100,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text("Welcome Back",
-                          style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                      Text("LIUCHAT",
+                          style: TextStyle(
+                            fontSize: 28.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryOrange,
+                          )),
+                      SizedBox(height: 8.h),
+                      Text("Sign in or create account",
+                          style: TextStyle(fontSize: 14.sp, color: Colors.grey)),
                       SizedBox(height: 25.h),
                       TextField(
                         controller: emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          hintText: "University Email",
+                          hintText: "12345678@students.liu.edu.lb",
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15.r)),
+                            borderRadius: BorderRadius.circular(15.r),
+                          ),
                         ),
                       ),
                       SizedBox(height: 25.h),
@@ -117,27 +125,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 55.h,
                         child: ElevatedButton(
-                          onPressed: isLoading ? null : loginUser,
+                          onPressed: isLoading ? null : sendOtp,
                           child: isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : Text("Send OTP", style: TextStyle(fontSize: 18.sp)),
                         ),
-                      ),
-                      SizedBox(height: 20.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an account? "),
-                          GestureDetector(
-                            onTap: () => Navigator.push(context,
-                                MaterialPageRoute(builder: (_) => const RegisterScreen())),
-                            child: Text("Register",
-                                style: TextStyle(
-                                    color: AppColors.primaryOrange,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.sp)),
-                          ),
-                        ],
                       ),
                     ],
                   ),

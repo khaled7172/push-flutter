@@ -26,6 +26,19 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final cleaned = query.trim();
+      // Only digits, minimum 2 characters
+      if (cleaned.length >= 2 && RegExp(r'^\d+$').hasMatch(cleaned)) {
+        searchUsers(cleaned);
+      } else {
+        setState(() => results = []);
+      }
+    });
+  }
+
+  void onSearchChanged(String query) {
     // Debounce — wait 500ms after user stops typing before searching
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -66,35 +79,17 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     }
   }
 
-  Future<void> startConversation(Map<String, dynamic> user) async {
-    try {
-      // Create or get existing conversation via REST API
-      final response = await supabase.functions.invoke(
-        'create-conversation',
-        body: {'with_user_id': user['id']},
-      );
-
-      // Use WebSocket create_conversation instead
-      // Navigate to private chat — it handles conversation creation
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PrivateChatScreen(
-              recipientId: user['id'],
-              recipientUsername: user['username'],
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to start conversation")),
-        );
-      }
-    }
-  }
+  void startConversation(Map<String, dynamic> user) {
+   Navigator.push(
+     context,
+     MaterialPageRoute(
+       builder: (_) => PrivateChatScreen(
+         recipientId: user['id'],
+         recipientUsername: user['username'],
+       ),
+     ),
+   );
+ }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +107,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               onChanged: onSearchChanged,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: "Search by username...",
+                hintText: "Search by student ID...",
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: isLoading
                     ? Padding(

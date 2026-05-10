@@ -1,5 +1,5 @@
 import '../main.dart';
-import 'login_screen.dart';
+import 'auth_screen.dart';
 import '../services/encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -43,7 +43,7 @@ class HomeScreen extends StatelessWidget {
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const AuthScreen()),
           (_) => false,
         );
       }
