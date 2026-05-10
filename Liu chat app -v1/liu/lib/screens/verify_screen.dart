@@ -133,7 +133,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             child: Container(
               width: 180.w, height: 180.w,
               decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withOpacity(0.3),
+                color: AppColors.primaryOrange.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
             ),
@@ -143,7 +143,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             child: Container(
               width: 220.w, height: 220.w,
               decoration: BoxDecoration(
-                color: AppColors.navyBlue.withOpacity(0.25),
+                color: AppColors.navyBlue.withValues(alpha: 0.25),
                 shape: BoxShape.circle,
               ),
             ),
@@ -154,7 +154,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
               child: Container(
                 padding: EdgeInsets.all(25.w),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
                   borderRadius: BorderRadius.circular(25.r),
                   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 20)],
                 ),
