@@ -356,7 +356,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(vertical: 6.h),
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

@@ -38,18 +38,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     });
   }
 
-  void onSearchChanged(String query) {
-    // Debounce — wait 500ms after user stops typing before searching
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (query.trim().length >= 2) {
-        searchUsers(query.trim());
-      } else {
-        setState(() => results = []);
-      }
-    });
-  }
-
   Future<void> searchUsers(String query) async {
     setState(() => isLoading = true);
 
