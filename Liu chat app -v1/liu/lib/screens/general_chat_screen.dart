@@ -33,7 +33,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
   }
 
   Future<void> initChat() async {
-    // Fetch the general group id for this major
     try {
       final response = await supabase
           .from('groups')
@@ -44,7 +43,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
 
       groupId = response['id'];
 
-      // Fetch existing messages
       final msgs = await supabase
           .from('group_messages')
           .select('content, sender_id, created_at, profiles(username)')
@@ -58,7 +56,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
         });
       }
 
-      // Connect WebSocket
       connectWebSocket();
     } catch (e) {
       if (mounted) {
@@ -79,8 +76,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
       protocols: [],
     );
 
-    // Send auth header via first message since WebSocketChannel
-    // doesn't support headers on all platforms
     channel!.sink.add(jsonEncode({
       'type': 'auth',
       'token': token,
@@ -89,7 +84,9 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     channel!.stream.listen(
       (data) {
         final msg = jsonDecode(data);
-        if (msg['type'] == 'group_message' && msg['group_id'] == groupId) {
+        if (msg['type'] == 'group_message' &&
+            msg['group_id'] == groupId &&
+            msg['sender_id'] != supabase.auth.currentUser?.id) {
           setState(() {
             messages.add({
               'content': msg['content'],
@@ -120,28 +117,28 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
   }
 
   void sendMessage() {
-   if (messageController.text.trim().isEmpty || groupId == null) return;
+    if (messageController.text.trim().isEmpty || groupId == null) return;
 
-   final text = messageController.text.trim();
+    final text = messageController.text.trim();
 
-   channel?.sink.add(jsonEncode({
-     'type': 'group_message',
-     'group_id': groupId,
-     'content': text,
-   }));
+    channel?.sink.add(jsonEncode({
+      'type': 'group_message',
+      'group_id': groupId,
+      'content': text,
+    }));
 
-   setState(() {
-     messages.add({
-       'content': text,
-       'sender_id': supabase.auth.currentUser!.id,
-       'created_at': DateTime.now().toIso8601String(),
-       'profiles': {'username': 'You'},
-     });
-   });
+    setState(() {
+      messages.add({
+        'content': text,
+        'sender_id': supabase.auth.currentUser!.id,
+        'created_at': DateTime.now().toIso8601String(),
+        'profiles': {'username': 'You'},
+      });
+    });
 
-   messageController.clear();
-   scrollToBottom();
- }
+    messageController.clear();
+    scrollToBottom();
+  }
 
   @override
   void dispose() {

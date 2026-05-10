@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,12 +9,10 @@ import 'home_screen.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String email;
-  final bool isSignUp;
 
   const VerifyScreen({
     super.key,
     required this.email,
-    this.isSignUp = false,
   });
 
   @override
@@ -23,6 +22,40 @@ class VerifyScreen extends StatefulWidget {
 class _VerifyScreenState extends State<VerifyScreen> {
   final TextEditingController codeController = TextEditingController();
   bool isLoading = false;
+  bool canResend = false;
+  int countdown = 60;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    startCooldown();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    codeController.dispose();
+    super.dispose();
+  }
+
+  void startCooldown() {
+    setState(() {
+      canResend = false;
+      countdown = 60;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        countdown--;
+        if (countdown <= 0) {
+          canResend = true;
+          timer.cancel();
+        }
+      });
+    });
+  }
 
   Future<void> verifyCode() async {
     final code = codeController.text.trim();
@@ -40,11 +73,9 @@ class _VerifyScreenState extends State<VerifyScreen> {
       await supabase.auth.verifyOTP(
         email: widget.email,
         token: code,
-        // signup type for registration, email type for OTP login
-        type: widget.isSignUp ? OtpType.signup : OtpType.email,
+        type: OtpType.email,
       );
 
-      // Initialize E2E encryption keys after confirmed identity
       await EncryptionService.initializeKeys();
 
       if (mounted) {
@@ -71,19 +102,14 @@ class _VerifyScreenState extends State<VerifyScreen> {
   }
 
   Future<void> resendCode() async {
+    if (!canResend) return;
     try {
-      if (widget.isSignUp) {
-        await supabase.auth.resend(
-          type: OtpType.email,
-          email: widget.email,
-        );
-      } else {
-        await supabase.auth.signInWithOtp(email: widget.email);
-      }
+      await supabase.auth.signInWithOtp(email: widget.email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Code resent to your email")),
         );
+        startCooldown();
       }
     } catch (e) {
       if (mounted) {
@@ -107,7 +133,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             child: Container(
               width: 180.w, height: 180.w,
               decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withValues(alpha: 0.3),
+                color: AppColors.primaryOrange.withOpacity(0.3),
                 shape: BoxShape.circle,
               ),
             ),
@@ -117,7 +143,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
             child: Container(
               width: 220.w, height: 220.w,
               decoration: BoxDecoration(
-                color: AppColors.navyBlue.withValues(alpha: 0.25),
+                color: AppColors.navyBlue.withOpacity(0.25),
                 shape: BoxShape.circle,
               ),
             ),
@@ -128,7 +154,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
               child: Container(
                 padding: EdgeInsets.all(25.w),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white,
+                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                   borderRadius: BorderRadius.circular(25.r),
                   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 20)],
                 ),
@@ -141,16 +167,23 @@ class _VerifyScreenState extends State<VerifyScreen> {
                     ),
                     SizedBox(height: 15.h),
                     Text(
-                      "Enter the 6-digit code sent to ${widget.email}",
+                      "Enter the 6-digit code sent to\n${widget.email}",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14.sp),
+                      style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                     ),
                     SizedBox(height: 25.h),
                     TextField(
                       controller: codeController,
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      decoration: const InputDecoration(hintText: "Enter Code"),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 22.sp, letterSpacing: 8),
+                      decoration: InputDecoration(
+                        hintText: "------",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15.r),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 25.h),
                     SizedBox(
@@ -165,8 +198,14 @@ class _VerifyScreenState extends State<VerifyScreen> {
                     ),
                     SizedBox(height: 15.h),
                     TextButton(
-                      onPressed: resendCode,
-                      child: const Text("Resend Code"),
+                      onPressed: canResend ? resendCode : null,
+                      child: Text(
+                        canResend ? "Resend Code" : "Resend in ${countdown}s",
+                        style: TextStyle(
+                          color: canResend ? AppColors.primaryOrange : Colors.grey,
+                          fontSize: 14.sp,
+                        ),
+                      ),
                     ),
                   ],
                 ),

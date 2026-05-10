@@ -6,7 +6,7 @@ import '../main.dart';
 
 class ChatScreen extends StatefulWidget {
   final String title;
-  final String roomId; // group id from Supabase
+  final String roomId;
 
   const ChatScreen({
     super.key,
@@ -33,7 +33,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> initChat() async {
     try {
-      // Fetch existing messages
       final msgs = await supabase
           .from('group_messages')
           .select('content, sender_id, created_at, profiles(username)')
@@ -75,7 +74,8 @@ class _ChatScreenState extends State<ChatScreen> {
       (data) {
         final msg = jsonDecode(data);
         if (msg['type'] == 'group_message' &&
-            msg['group_id'] == widget.roomId) {
+            msg['group_id'] == widget.roomId &&
+            msg['sender_id'] != supabase.auth.currentUser?.id) {
           setState(() {
             messages.add({
               'content': msg['content'],
@@ -108,13 +108,25 @@ class _ChatScreenState extends State<ChatScreen> {
   void sendMessage() {
     if (messageController.text.trim().isEmpty) return;
 
+    final text = messageController.text.trim();
+
     channel?.sink.add(jsonEncode({
       'type': 'group_message',
       'group_id': widget.roomId,
-      'content': messageController.text.trim(),
+      'content': text,
     }));
 
+    setState(() {
+      messages.add({
+        'content': text,
+        'sender_id': supabase.auth.currentUser!.id,
+        'created_at': DateTime.now().toIso8601String(),
+        'profiles': {'username': 'You'},
+      });
+    });
+
     messageController.clear();
+    scrollToBottom();
   }
 
   @override
@@ -144,8 +156,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final msg = messages[index];
                       final isMe = msg['sender_id'] == myId;
-                      final username =
-                          msg['profiles']?['username'] ?? 'Unknown';
+                      final username = msg['profiles']?['username'] ?? 'Unknown';
 
                       return Align(
                         alignment: isMe
@@ -157,9 +168,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           decoration: BoxDecoration(
                             color: isMe
                                 ? Theme.of(context).primaryColor
-                                : (isDark
-                                    ? Colors.white10
-                                    : Colors.grey[200]),
+                                : (isDark ? Colors.white10 : Colors.grey[200]),
                             borderRadius: BorderRadius.circular(15.r),
                           ),
                           child: Column(
