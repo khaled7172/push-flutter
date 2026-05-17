@@ -25,11 +25,27 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
   WebSocketChannel? channel;
   String? groupId;
   bool isLoading = true;
+  Map<String, String> usernameCache = {};
 
   @override
   void initState() {
     super.initState();
     initChat();
+  }
+
+  Future<String> getUsername(String userId) async {
+    if (usernameCache.containsKey(userId)) return usernameCache[userId]!;
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .single();
+      usernameCache[userId] = response['username'];
+      return response['username'];
+    } catch (_) {
+      return 'Unknown';
+    }
   }
 
   Future<void> initChat() async {
@@ -82,20 +98,23 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     }));
 
     channel!.stream.listen(
-      (data) {
+      (data) async {
         final msg = jsonDecode(data);
         if (msg['type'] == 'group_message' &&
             msg['group_id'] == groupId &&
             msg['sender_id'] != supabase.auth.currentUser?.id) {
-          setState(() {
-            messages.add({
-              'content': msg['content'],
-              'sender_id': msg['sender_id'],
-              'created_at': msg['created_at'],
-              'profiles': {'username': msg['sender_id']},
+          final username = await getUsername(msg['sender_id']);
+          if (mounted) {
+            setState(() {
+              messages.add({
+                'content': msg['content'],
+                'sender_id': msg['sender_id'],
+                'created_at': msg['created_at'],
+                'profiles': {'username': username},
+              });
             });
-          });
-          scrollToBottom();
+            scrollToBottom();
+          }
         }
       },
       onError: (error) {

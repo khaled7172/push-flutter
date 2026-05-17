@@ -108,11 +108,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const UserSearchScreen(),
-                ),
-              );
+                  builder: (_) => const UserSearchScreen()),
+                ).then((_) => fetchConversations());
             },
-          ),
+              ),
         ],
       ),
       body: isLoading
