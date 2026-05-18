@@ -1,6 +1,5 @@
 import '../main.dart';
 import 'auth_screen.dart';
-import '../services/encryption_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
@@ -11,11 +10,11 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
   final List<Map<String, String>> schools = [
-    {"name": "School of Arts & Sciences", "icon": "🎨"},
-    {"name": "School of Business", "icon": "💼"},
-    {"name": "School of Engineering", "icon": "⚙️"},
-    {"name": "School of Pharmacy", "icon": "💊"},
-    {"name": "School of Education", "icon": "📚"},
+    {"name": "School of Arts & Sciences", "icon": "🎓"},
+    {"name": "School of Business", "icon": "🎓"},
+    {"name": "School of Engineering", "icon": "🎓"},
+    {"name": "School of Pharmacy", "icon": "🎓"},
+    {"name": "School of Education", "icon": "🎓"},
   ];
 
   @override
@@ -38,7 +37,6 @@ class HomeScreen extends StatelessWidget {
     icon: const Icon(Icons.logout),
     tooltip: "Logout",
     onPressed: () async {
-      await EncryptionService.clearKeys();
       await supabase.auth.signOut();
       if (context.mounted) {
         Navigator.pushAndRemoveUntil(

@@ -24,7 +24,7 @@ class PrivateChatScreen extends StatefulWidget {
 
 class _PrivateChatScreenState extends State<PrivateChatScreen> {
   final TextEditingController messageController = TextEditingController();
-  final ScrollController scrollController = ScrollController();
+
 
   List<Map<String, dynamic>> messages = [];
   WebSocketChannel? channel;
@@ -141,7 +141,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
           .from('messages')
           .select('id, encrypted_content, sender_id, created_at')
           .eq('conversation_id', conversationId!)
-          .order('created_at');
+          .order('created_at', ascending: false);
 
       List<Map<String, dynamic>> decryptedMessages = [];
 
@@ -186,7 +186,6 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
       if (mounted) {
         setState(() => messages = decryptedMessages);
-        scrollToBottom();
       }
     } catch (e) {
       debugPrint('Failed to load message history: $e');
@@ -205,14 +204,13 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
       if (mounted) {
         setState(() {
-          messages.add({
+          messages.insert(0, {
             'content': decrypted,
             'sender_id': msg['sender_id'],
             'created_at': msg['created_at'],
             'isMe': false,
           });
         });
-        scrollToBottom();
       }
     } catch (e) {
       debugPrint('Failed to decrypt incoming message: $e');
@@ -255,7 +253,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
 
       // Add to local messages immediately (optimistic update)
       setState(() {
-        messages.add({
+        messages.insert(0, {
           'content': text,
           'sender_id': myId,
           'created_at': DateTime.now().toIso8601String(),
@@ -264,7 +262,6 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         isSending = false;
       });
 
-      scrollToBottom();
     } catch (e) {
       setState(() => isSending = false);
       if (mounted) {
@@ -273,18 +270,6 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         );
       }
     }
-  }
-
-  void scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
   }
 
   String formatTime(String isoString) {
@@ -298,7 +283,6 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
   void dispose() {
     channel?.sink.close();
     messageController.dispose();
-    scrollController.dispose();
     super.dispose();
   }
 
@@ -386,7 +370,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
                           ),
                         )
                       : ListView.builder(
-                          controller: scrollController,
+                          reverse: true,
                           padding: EdgeInsets.all(12.w),
                           itemCount: messages.length,
                           itemBuilder: (context, index) {

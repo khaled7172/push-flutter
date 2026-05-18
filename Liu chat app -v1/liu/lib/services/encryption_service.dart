@@ -15,34 +15,42 @@ class EncryptionService {
   /// saves public key to Supabase profiles table.
   static Future<void> initializeKeys() async {
     try {
-      // Check if keys already exist
       final existingKey = await _storage.read(key: _privateKeyStorageKey);
-      
-      // Also check if public key is already in Supabase
-      final profile = await supabase
-          .from('profiles')
-          .select('public_key')
-          .eq('id', supabase.auth.currentUser!.id)
-          .single();
 
-      if (existingKey != null && profile['public_key'] != null) {
-        // Keys already set up
+      if (existingKey != null) {
+        // Private key exists on device — make sure public key is in Supabase
+        final profile = await supabase
+            .from('profiles')
+            .select('public_key')
+            .eq('id', supabase.auth.currentUser!.id)
+            .single();
+
+        if (profile['public_key'] != null) return; // All good
+
+        // Public key missing from Supabase — re-upload it
+        final privateKeyBytes = base64Decode(existingKey);
+        final x25519 = X25519();
+        final keyPair = await x25519.newKeyPairFromSeed(privateKeyBytes);
+        final publicKey = await keyPair.extractPublicKey();
+
+        await supabase.from('profiles').update({
+          'public_key': base64Encode(publicKey.bytes),
+        }).eq('id', supabase.auth.currentUser!.id);
+
         return;
       }
 
-      // Generate new X25519 key pair
+      // No private key on device — generate fresh pair
       final algorithm = X25519();
       final keyPair = await algorithm.newKeyPair();
       final publicKey = await keyPair.extractPublicKey();
       final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
 
-      // Store private key securely on device — never sent anywhere
       await _storage.write(
         key: _privateKeyStorageKey,
         value: base64Encode(privateKeyBytes),
       );
 
-      // Save public key to Supabase
       await supabase.from('profiles').update({
         'public_key': base64Encode(publicKey.bytes),
       }).eq('id', supabase.auth.currentUser!.id);

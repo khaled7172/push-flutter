@@ -84,11 +84,13 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('CONV ERROR: $e');
+      debugPrint('STACK: $stack');
       if (mounted) {
         setState(() => isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to load conversations")),
+          SnackBar(content: Text("Error: $e")),
         );
       }
     }

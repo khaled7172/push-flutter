@@ -20,7 +20,6 @@ class GeneralChatScreen extends StatefulWidget {
 
 class _GeneralChatScreenState extends State<GeneralChatScreen> {
   final TextEditingController messageController = TextEditingController();
-  final ScrollController scrollController = ScrollController();
   List<Map<String, dynamic>> messages = [];
   WebSocketChannel? channel;
   String? groupId;
@@ -63,7 +62,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
           .from('group_messages')
           .select('content, sender_id, created_at, profiles(username)')
           .eq('group_id', groupId!)
-          .order('created_at');
+          .order('created_at', ascending: false);
 
       if (mounted) {
         setState(() {
@@ -106,14 +105,13 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
           final username = await getUsername(msg['sender_id']);
           if (mounted) {
             setState(() {
-              messages.add({
+              messages.insert(0, {
                 'content': msg['content'],
                 'sender_id': msg['sender_id'],
                 'created_at': msg['created_at'],
                 'profiles': {'username': username},
               });
             });
-            scrollToBottom();
           }
         }
       },
@@ -123,17 +121,6 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     );
   }
 
-  void scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
 
   void sendMessage() {
     if (messageController.text.trim().isEmpty || groupId == null) return;
@@ -147,7 +134,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     }));
 
     setState(() {
-      messages.add({
+      messages.insert(0, {
         'content': text,
         'sender_id': supabase.auth.currentUser!.id,
         'created_at': DateTime.now().toIso8601String(),
@@ -156,14 +143,12 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
     });
 
     messageController.clear();
-    scrollToBottom();
   }
 
   @override
   void dispose() {
     channel?.sink.close();
     messageController.dispose();
-    scrollController.dispose();
     super.dispose();
   }
 
@@ -180,7 +165,7 @@ class _GeneralChatScreenState extends State<GeneralChatScreen> {
               children: [
                 Expanded(
                   child: ListView.builder(
-                    controller: scrollController,
+                    reverse: true,
                     padding: EdgeInsets.all(12.w),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
